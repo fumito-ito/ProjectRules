@@ -1,5 +1,8 @@
 // Sources/ProjectRulesGenerator/ProjectRulesGenerator.swift
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// キーワードに対応するリモートの .mdc ファイルを取得し、その内容を結合または個別に返す処理
 public struct ProjectRulesGenerator {

@@ -5,7 +5,7 @@ import ProjectRulesGenerator
 
 @main
 struct ProjectRulesCLI: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "ProjectRules",
         abstract: "Generate .mdc files based on provided keywords."
     )

@@ -3,81 +3,26 @@ import Vapor
 import ProjectRulesGenerator
 
 func routes(_ app: Application) throws {
-
-    // ルート：HTML フォームを表示
+    // index.html を読み込んでサーバー側で候補配列を埋め込むルート
     app.get { req -> Response in
-        let html = """
-        <!DOCTYPE html>
-        <html lang="ja">
-        <head>
-            <meta charset="UTF-8">
-            <title>Project Rules (.mdc) Generator</title>
-            <style>
-                body { font-family: sans-serif; margin: 40px; }
-                .keyword-list { margin-top: 20px; }
-                .keyword-item {
-                    display: inline-block;
-                    background-color: #ddd;
-                    padding: 5px 10px;
-                    margin: 5px;
-                    border-radius: 5px;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Project Rules (.mdc) Generator</h1>
-            <input type="text" id="keywordInput" placeholder="プログラミング言語、IDE等を入力" list="suggestions">
-            <datalist id="suggestions">
-                <option value="Swift"></option>
-                <option value="Objective-C"></option>
-                <option value="Python"></option>
-                <option value="JavaScript"></option>
-                <option value="Xcode"></option>
-                <option value="Visual Studio"></option>
-                <option value="IntelliJ"></option>
-                <option value="Eclipse"></option>
-            </datalist>
-            <button id="addKeyword">Add Keyword</button>
-            <div class="keyword-list" id="keywordList"></div>
-            <br>
-            <button id="submitBtn">Submit</button>
-            
-            <script>
-                const keywordInput = document.getElementById('keywordInput');
-                const addKeywordBtn = document.getElementById('addKeyword');
-                const keywordListDiv = document.getElementById('keywordList');
-                let keywords = [];
-                
-                addKeywordBtn.addEventListener('click', () => {
-                    const value = keywordInput.value.trim();
-                    if (value && !keywords.includes(value)) {
-                        keywords.push(value);
-                        const span = document.createElement('span');
-                        span.textContent = value;
-                        span.className = 'keyword-item';
-                        keywordListDiv.appendChild(span);
-                        keywordInput.value = '';
-                    }
-                });
-                
-                document.getElementById('submitBtn').addEventListener('click', () => {
-                    if(keywords.length === 0) {
-                        alert("少なくとも 1 つのキーワードを追加してください。");
-                        return;
-                    }
-                    const url = '/projectrules/api/' + encodeURIComponent(keywords.join(','));
-                    window.location.href = url;
-                });
-            </script>
-        </body>
-        </html>
-        """
+        // サーバー側で候補の配列を定義
+        let suggestionsArray = ["swift", "objective-c", "python", "javascript", "xcode", "visual-studio", "intellij", "eclipse"]
+        // JSON 文字列にエンコード
+        let jsonData = try JSONEncoder().encode(suggestionsArray)
+        let suggestionsJSON = String(data: jsonData, encoding: .utf8) ?? "[]"
+
+        // Public/index.html ファイルを読み込む
+        let filePath = req.application.directory.publicDirectory + "index.html"
+        let htmlContent = try String(contentsOfFile: filePath)
+        // プレースホルダー {{suggestions}} を JSON に置換
+        let renderedHTML = htmlContent.replacingOccurrences(of: "{{suggestions}}", with: suggestionsJSON)
+
         var headers = HTTPHeaders()
         headers.add(name: .contentType, value: "text/html; charset=utf-8")
-        return Response(status: .ok, headers: headers, body: .init(string: html))
+        return Response(status: .ok, headers: headers, body: .init(string: renderedHTML))
     }
 
-    // API エンドポイント：URL パラメータからキーワードを取得し、.mdc ファイル内容を結合して表示
+    // 例えば、API エンドポイントとして、動的に .mdc ファイル内容を生成して返すルート
     app.get("projectrules", "api", ":keywords") { req async throws -> Response in
         guard let keywordsParam = req.parameters.get("keywords") else {
             throw Abort(.badRequest)
@@ -88,16 +33,18 @@ func routes(_ app: Application) throws {
 
         let html = """
         <!DOCTYPE html>
-        <html lang="ja">
+        <html lang="en">
         <head>
             <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Generated .mdc Content</title>
             <style>
-                body { font-family: monospace; white-space: pre; margin: 40px; }
+                body { font-family: monospace; padding: 40px; background: #fff; }
+                pre { white-space: pre-wrap; word-wrap: break-word; }
             </style>
         </head>
         <body>
-        \(content)
+            <pre>\(content)</pre>
         </body>
         </html>
         """
@@ -111,8 +58,16 @@ public func app(_ environment: Environment) throws -> Application {
     var env = environment
     try LoggingSystem.bootstrap(from: &env)
     let app = Application(env)
+    try configure(app)
     try routes(app)
     return app
+}
+
+public func configure(_ app: Application) throws {
+    // ここでホスト名を "0.0.0.0" に設定する
+    app.http.server.configuration.hostname = "0.0.0.0"
+    // 静的ファイルを配信するためのミドルウェア（必要なら設定）
+    app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 }
 
 do {
