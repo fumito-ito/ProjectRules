@@ -25,6 +25,9 @@ let package = Package(
             dependencies: [
                 "ProjectRulesGenerator",
                 .product(name: "Vapor", package: "vapor")
+            ],
+            resources: [
+                .copy("mdc.json")
             ]
         ),
         .executableTarget(

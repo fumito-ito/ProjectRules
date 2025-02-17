@@ -13,6 +13,8 @@ RUN swift package resolve
 # ソースコードをすべてコピー
 COPY . .
 
+RUN cp Sources/ProjectRulesIO/mdc.json ./mdc.json
+
 # リリースビルド（生成される実行ファイル名は Package.swift の products 設定に合わせる）
 RUN swift build -c release --product ProjectRulesIO
 
@@ -27,6 +29,7 @@ WORKDIR /app
 COPY --from=builder /app/.build/release/ProjectRulesIO .
 # Public フォルダもコピーする
 COPY --from=builder /app/Public ./Public
+COPY --from=builder /app/mdc.json ./mdc.json
 # Vapor はデフォルトで環境変数 PORT が存在する場合そのポートでリッスンするようになっています。
 # 必要に応じて環境変数を設定してください
 ENV PORT=8080

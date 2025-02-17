@@ -1,0 +1,1 @@
+{ "mdc": ["ensure-eslint","nextjs","playwright","prevent-editing-generated-files","pullrequest","storybook","task","vitest","zustand"] }

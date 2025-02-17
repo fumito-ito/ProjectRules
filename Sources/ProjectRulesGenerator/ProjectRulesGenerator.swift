@@ -8,7 +8,7 @@ import FoundationNetworking
 public struct ProjectRulesGenerator {
 
     /// リポジトリ指定がない場合に利用する既定の mdc ファイルリポジトリのベース URL
-    public static let defaultBaseURLString = "https://raw.githubusercontent.com/fumito-ito/mdcvalult/main/"
+    public static let defaultBaseURLString = "https://raw.githubusercontent.com/fumito-ito/mdcvalult/main/mdc/"
 
     /// 複数のキーワードに対応する {キーワード}.mdc ファイルを取得し、結合した文字列を返します（Webサービス用）。
     public static func generate(for keywords: [String], repository: String? = nil) async throws -> String {
@@ -28,7 +28,7 @@ public struct ProjectRulesGenerator {
     public static func fetch(for keyword: String, repository: String? = nil) async throws -> String {
         let baseURL: String
         if let repo = repository, !repo.isEmpty {
-            baseURL = "https://raw.githubusercontent.com/\(repo)/main/"
+            baseURL = "https://raw.githubusercontent.com/\(repo)/main/mdc/"
         } else {
             baseURL = defaultBaseURLString
         }

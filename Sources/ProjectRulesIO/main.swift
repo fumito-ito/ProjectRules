@@ -5,11 +5,14 @@ import ProjectRulesGenerator
 func routes(_ app: Application) throws {
     // index.html を読み込んでサーバー側で候補配列を埋め込むルート
     app.get { req -> Response in
-        // サーバー側で候補の配列を定義
-        let suggestionsArray = ["swift", "objective-c", "python", "javascript", "xcode", "visual-studio", "intellij", "eclipse"]
-        // JSON 文字列にエンコード
-        let jsonData = try JSONEncoder().encode(suggestionsArray)
-        let suggestionsJSON = String(data: jsonData, encoding: .utf8) ?? "[]"
+        // mdc.json のパス（プロジェクト直下に配置している前提）
+        let mdcPath = req.application.directory.workingDirectory + "mdc.json"
+        let mdcData = try Data(contentsOf: URL(fileURLWithPath: mdcPath))
+        let mdcFile = try JSONDecoder().decode(MDCFile.self, from: mdcData)
+
+        // 候補配列を JSON 文字列にエンコード
+        let suggestionsJSONData = try JSONEncoder().encode(mdcFile.mdc)
+        let suggestionsJSON = String(data: suggestionsJSONData, encoding: .utf8) ?? "[]"
 
         // Public/index.html ファイルを読み込む
         let filePath = req.application.directory.publicDirectory + "index.html"
