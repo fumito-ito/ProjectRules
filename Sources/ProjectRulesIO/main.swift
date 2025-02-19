@@ -3,29 +3,14 @@ import Vapor
 import ProjectRulesGenerator
 
 func routes(_ app: Application) throws {
-    // index.html を読み込んでサーバー側で候補配列を埋め込むルート
-    app.get { req -> Response in
-        // mdc.json のパス（プロジェクト直下に配置している前提）
-        let mdcPath = req.application.directory.workingDirectory + "mdc.json"
-        let mdcData = try Data(contentsOf: URL(fileURLWithPath: mdcPath))
-        let mdcFile = try JSONDecoder().decode(MDCFile.self, from: mdcData)
-
-        // 候補配列を JSON 文字列にエンコード
-        let suggestionsJSONData = try JSONEncoder().encode(mdcFile.mdc)
-        let suggestionsJSON = String(data: suggestionsJSONData, encoding: .utf8) ?? "[]"
-
-        // Public/index.html ファイルを読み込む
-        let filePath = req.application.directory.publicDirectory + "index.html"
-        let htmlContent = try String(contentsOfFile: filePath)
-        // プレースホルダー {{suggestions}} を JSON に置換
-        let renderedHTML = htmlContent.replacingOccurrences(of: "{{suggestions}}", with: suggestionsJSON)
-
-        var headers = HTTPHeaders()
-        headers.add(name: .contentType, value: "text/html; charset=utf-8")
-        return Response(status: .ok, headers: headers, body: .init(string: renderedHTML))
+    // MARK: - `/index.html`
+    app.get { req -> EventLoopFuture<Response> in
+        let indexPath = req.application.directory.publicDirectory + "index.html"
+        let response = req.fileio.streamFile(at: indexPath)
+        return req.eventLoop.makeSucceededFuture(response)
     }
 
-    // 例えば、API エンドポイントとして、動的に .mdc ファイル内容を生成して返すルート
+    // MARK: - `/projectrules/api/{keywords}`
     app.get("projectrules", "api", ":keywords") { req async throws -> Response in
         guard let keywordsParam = req.parameters.get("keywords") else {
             throw Abort(.badRequest)
@@ -67,14 +52,15 @@ public func app(_ environment: Environment) throws -> Application {
 }
 
 public func configure(_ app: Application) throws {
-    // ここでホスト名を "0.0.0.0" に設定する
+    // CloudRun default setting
     app.http.server.configuration.hostname = "0.0.0.0"
-    // 静的ファイルを配信するためのミドルウェア（必要なら設定）
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 }
 
 do {
-    try app(.development).run()
+    let envValue = Environment.get("ENV") ?? "dev"
+    let env: Environment = (envValue.lowercased() == "prod") ? .production : .development
+    try app(env).run()
 } catch {
     print("Failed to start application: \(error)")
 }

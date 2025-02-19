@@ -1,0 +1,52 @@
+name: Build and Upload Release Binary
+
+on:
+  release:
+    types: [published]
+
+# permission to upload binary
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Swift with Xcode
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_16.2.0.app
+
+      - name: Build release binary
+        run: |
+          swift build -c release --product ProjectRules
+
+      - name: Archive the binary
+        run: |
+          # Set platform name
+          PLATFORM=$([[ "${{ runner.os }}" == "Linux" ]] && echo "ubuntu" || echo "macos")
+          
+          # Create archive
+          tar -czvf projectrules-${PLATFORM}.tar.gz -C .build/release ProjectRules
+
+      - name: Upload release asset using GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Set platform name
+          PLATFORM=$([[ "${{ runner.os }}" == "Linux" ]] && echo "ubuntu" || echo "macos")
+          
+          TAG=${GITHUB_REF##*/}
+          echo "Creating checksum text for ${{ matrix.os }}"
+          shasum -a 256 projectrules-${PLATFORM}.tar.gz | awk '{print $1}' > projectrules.${PLATFORM}.sha256.txt
+
+          echo "Uploading asset for ${{ matrix.os }} to release $TAG"
+          gh release upload "$TAG" projectrules-${PLATFORM}.tar.gz --clobber
+          gh release upload "$TAG" projectrules.${PLATFORM}.sha256.txt --clobber

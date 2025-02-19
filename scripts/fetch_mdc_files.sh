@@ -1,16 +1,18 @@
 #!/bin/bash
 
-# GitHub リポジトリ情報
-OWNER="fumito-ito"
-REPO="mdcvalult"
-DIRECTORY="mdc"
+# APIレスポンスのエラーチェック
+response=$(gh api "repos/$MDC_REPO_OWNER/$MDC_REPO/contents/$MDC_REPO_DIRECTORY" 2>/dev/null)
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to fetch repository contents"
+    exit 1
+fi
 
-# GitHub API を使ってディレクトリ内のファイルを取得
-FILES=$(gh api "repos/$OWNER/$REPO/contents/$DIRECTORY" --jq '.[] | select(.type=="file" and (.name | endswith(".mdc"))) | .name')
+# get `.mdc` filenames from repository
+FILES=$(gh api "repos/$OWNER/$MDC_REPO/contents/$MDC_REPO_DIRECTORY" --jq '.[] | select(.type=="file" and (.name | endswith(".mdc"))) | .name')
 
-# JSON 形式で出力
+# output as JSON
 if [ -n "$FILES" ]; then
-    # `.mdc` を取り除いたファイル名を配列化
+    # remove `.mdc` prefix from the filename
     FILE_LIST=$(echo "$FILES" | sed 's/\.mdc$//' | jq -R -s -c 'split("\n") | map(select(. != ""))')
     echo "{ \"mdc\": $FILE_LIST }"
 else

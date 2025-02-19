@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// CursorRules の生成処理で発生し得るエラーを表す独自エラー型
+/// A custom error type representing errors that may occur during the generation process of Project Rules.
 public enum ProjectRulesError: Error, LocalizedError {
     case invalidKeywordEncoding(keyword: String)
     case invalidURL(urlString: String)

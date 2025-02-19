@@ -10,16 +10,16 @@ struct ProjectRulesCLI: AsyncParsableCommand {
         abstract: "Generate .mdc files based on provided keywords."
     )
 
-    @Argument(help: "カンマ区切りのキーワード（例: Swift,Xcode,Python）")
+    @Argument(help: "Comma-separated keywords (e.g., best-practices-for-writitng-nextjs)")
     var keywords: String
 
-    @Option(name: [.short, .long], help: "GitHub リポジトリを owner/reponame 形式で指定します。指定された場合、そのリポジトリ内の {キーワード}.mdc ファイルを参照します")
+    @Option(name: [.short, .long], help: "Specify a GitHub repository in owner/reponame format. If provided, the {keyword}.mdc file from that repository will be used.")
     var repo: String?
 
-    @Option(name: [.short, .long], help: "出力先のディレクトリを指定します。省略時はカレントディレクトリ")
+    @Option(name: [.short, .long], help: "Specify the output directory. Defaults to the current directory.")
     var targetDirectory: String?
 
-    @Flag(help: "指定した場合、ファイル出力せず内容を標準出力に表示します")
+    @Flag(help: "If set, display the output content to standard output instead of writing to a file.")
     var dryRun: Bool = false
 
     mutating func run() async throws {
