@@ -42,7 +42,7 @@ Set `GITHUB_TOKEN` environment variable with your GitHub personal access token i
 $ projectrules best-practices-for-writitng-nextjs
 
 # Generate multiple .mdc files in specified directory
-$ projectrules "swift,ios" -t .cursor/rules
+$ projectrules best-practices-for-writitng-nextjs -t .cursor/rules
 
 # Preview content without writing to file
 $ projectrules guidelines-for-writing-postgres-sql-by-supabase --dry-run
