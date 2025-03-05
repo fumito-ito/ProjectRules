@@ -33,6 +33,24 @@ let package = Package(
                 "ProjectRulesGenerator",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
+        ),
+        .testTarget(
+            name: "ProjectRulesGeneratorTests",
+            dependencies: ["ProjectRulesGenerator"]
+        ),
+        .testTarget(
+            name: "ProjectRulesCLITests",
+            dependencies: [
+                "ProjectRulesCLI",
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ]
+        ),
+        .testTarget(
+            name: "ProjectRulesIOTests",
+            dependencies: [
+                "ProjectRulesIO",
+                .product(name: "XCTVapor", package: "vapor")
+            ]
         )
     ]
 )
